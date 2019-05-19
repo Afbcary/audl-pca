@@ -19,10 +19,10 @@ for (let individual of individualStats) {
   }
   dataset.push(sample);
 }
-console.log(dataset);
+console.log(`dataset: \n ${dataset}`);
 
 const pca = new PCA(dataset);
-console.log(pca.getExplainedVariance());
-console.log(pca.toJSON());
+console.log(`Explained Variance: \n ${pca.getExplainedVariance()}`);
+console.log(`PCA Object: ${pca.toJSON()}`);
 // const newPoints = [[4.9, 3.2, 1.2, 0.4], [5.4, 3.3, 1.4, 0.9]];
 // console.log(pca.predict(newPoints)); // project new points into the PCA space
