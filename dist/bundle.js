@@ -5611,13 +5611,11 @@ exports.PCA = PCA;
 
 },{"ml-matrix":5}],7:[function(require,module,exports){
 "use strict";
-var PCA = require('ml-pca').PCA;
-var dataset = [];
-for (var _i = 0, individualStats_1 = individualStats; _i < individualStats_1.length; _i++) {
-    var individual = individualStats_1[_i];
-    var sample = [];
-    for (var _a = 0, _b = Object.entries(individual); _a < _b.length; _a++) {
-        var prop = _b[_a];
+var { PCA } = require('ml-pca');
+const dataset = [];
+for (let individual of individualStats) {
+    const sample = [];
+    for (let prop of Object.entries(individual)) {
         switch (prop[0]) {
             case 'teamName':
             case 'year':
@@ -5631,7 +5629,7 @@ for (var _i = 0, individualStats_1 = individualStats; _i < individualStats_1.len
     dataset.push(sample);
 }
 console.log(dataset);
-var pca = new PCA(dataset);
+const pca = new PCA(dataset);
 console.log(pca.getExplainedVariance());
 console.log(pca.toJSON());
 
