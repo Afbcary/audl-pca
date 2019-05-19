@@ -5628,9 +5628,12 @@ for (let individual of individualStats) {
     }
     dataset.push(sample);
 }
-console.log(`dataset: \n ${dataset}`);
+console.log(`dataset}`);
+console.log(dataset);
 const pca = new PCA(dataset);
-console.log(`Explained Variance: \n ${pca.getExplainedVariance()}`);
-console.log(`PCA Object: ${pca.toJSON()}`);
+console.log(`Explained Variance}`);
+console.log(pca.getExplainedVariance());
+console.log(`PCA Object}`);
+console.log(pca.toJSON());
 
 },{"ml-pca":6}]},{},[7]);
