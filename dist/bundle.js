@@ -24925,13 +24925,28 @@ const pca = new PCA(dataset);
 console.log(`Explained Variance`);
 console.log(pca.getExplainedVariance());
 console.log(`PCA Object`);
-console.log(pca.toJSON());
+console.log(pca);
+console.log(`Cumulative Variance`);
+console.log(pca.getCumulativeVariance());
+console.log(`Eigenvectors`);
+console.log(pca.getEigenvectors());
+console.log(`Eigenvalues`);
+console.log(pca.getEigenvalues());
+console.log(`standard deviations`);
+console.log(pca.getStandardDeviations());
+console.log(`loadings`);
+console.log(pca.getLoadings());
 const variancePercentages = pca
     .getExplainedVariance()
+    .slice(0, 7)
     .map((d) => d * 100)
     .filter((d) => d > 0);
-generateBarGraph('variance-chart', variancePercentages, 'Variance', 'Component Variance');
-function generateBarGraph(canvasName, sortedData, labelText, title) {
+const cumulativeVariancePercentages = pca
+    .getCumulativeVariance()
+    .slice(0, 7)
+    .map((d) => d * 100);
+generateBarGraph('variance-chart', variancePercentages, 'Variance', 'Component Variance', cumulativeVariancePercentages, 'Cumulative Variance');
+function generateBarGraph(canvasName, sortedData, labelText, title, cumulativeVariance, labelText2) {
     var ctx = (document.getElementById(canvasName)).getContext('2d');
     let minValue = 0;
     let maxValue = 1;
@@ -24944,54 +24959,71 @@ function generateBarGraph(canvasName, sortedData, labelText, title) {
     for (let i = 0; i < sortedData.length; i++) {
         labels.push(`PC${i}`);
     }
-    var chart = new chart_js_1.default(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
+    const chartData = {
+        labels: labels,
+        datasets: [
+            {
+                type: 'bar',
+                label: labelText,
+                data: sortedData,
+                backgroundColor: sortedData.map(d => hsl_col_perc(d, minValue, maxValue)),
+                borderWidth: 1
+            },
+            {
+                type: 'line',
+                label: labelText2,
+                data: cumulativeVariance,
+                backgroundColor: `hsl(243, 100%,80%)`,
+                borderWidth: 1,
+                showLine: true
+            }
+        ]
+    };
+    const options = {
+        responsive: true,
+        maintainAspectRatio: true,
+        legend: { display: false },
+        title: {
+            display: true,
+            text: title
+        },
+        scales: {
+            yAxes: [
                 {
-                    label: labelText,
-                    data: sortedData,
-                    backgroundColor: sortedData.map(d => hsl_col_perc(d, minValue, maxValue)),
-                    borderWidth: 1
+                    ticks: {
+                        suggestedMin: 0,
+                        beginAtZero: true
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: '% Variance'
+                    }
                 }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            legend: { display: false },
-            title: {
-                display: true,
-                text: title
-            },
-            scales: {
-                yAxes: [
-                    {
-                        ticks: {
-                            suggestedMin: 0,
-                            beginAtZero: true
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: '% Variance'
-                        }
+        tooltips: {
+            intersect: false,
+            callbacks: {
+                title: function (toolTipItems) {
+                    const item = toolTipItems[0];
+                    if (item.datasetIndex === 1) {
+                        return 'Cumulative Variance';
                     }
-                ]
-            },
-            tooltips: {
-                intersect: false,
-                callbacks: {
-                    title: function (toolTipItems) {
-                        const item = toolTipItems[0];
-                        return String(item.xLabel);
-                    },
-                    label: function (tooltipItem) {
-                        return formattedValues[tooltipItem.index];
+                    return String(item.xLabel);
+                },
+                label: function (tooltipItem) {
+                    if (tooltipItem.datasetIndex === 1) {
+                        return String(cumulativeVariancePercentages[tooltipItem.index]);
                     }
+                    return formattedValues[tooltipItem.index] + '%';
                 }
             }
         }
+    };
+    var chart = new chart_js_1.default(ctx, {
+        type: 'bar',
+        data: chartData,
+        options: options
     });
     return chart;
 }

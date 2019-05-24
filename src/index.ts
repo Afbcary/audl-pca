@@ -28,25 +28,45 @@ const pca = new PCA(dataset);
 console.log(`Explained Variance`);
 console.log(pca.getExplainedVariance());
 console.log(`PCA Object`);
-console.log(pca.toJSON());
+console.log(pca);
+console.log(`Cumulative Variance`);
+console.log(pca.getCumulativeVariance());
+console.log(`Eigenvectors`);
+console.log(pca.getEigenvectors());
+console.log(`Eigenvalues`);
+console.log(pca.getEigenvalues());
+console.log(`standard deviations`);
+console.log(pca.getStandardDeviations());
+console.log(`loadings`);
+console.log(pca.getLoadings());
 
 const variancePercentages: number[] = pca
   .getExplainedVariance()
+  .slice(0, 7)
   .map((d: number) => d * 100)
   .filter((d: number) => d > 0);
+
+const cumulativeVariancePercentages: number[] = pca
+  .getCumulativeVariance()
+  .slice(0, 7)
+  .map((d: number) => d * 100);
 
 generateBarGraph(
   'variance-chart',
   variancePercentages,
   'Variance',
-  'Component Variance'
+  'Component Variance',
+  cumulativeVariancePercentages,
+  'Cumulative Variance'
 );
 
 function generateBarGraph(
   canvasName: string,
   sortedData: number[],
   labelText: string,
-  title: string
+  title: string,
+  cumulativeVariance: number[],
+  labelText2: string
 ) {
   var ctx = (<HTMLCanvasElement>(
     document.getElementById(canvasName)!
@@ -68,57 +88,76 @@ function generateBarGraph(
     labels.push(`PC${i}`);
   }
 
-  var chart = new Chart(ctx!, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
+  const chartData = {
+    labels: labels,
+    datasets: [
+      {
+        type: 'bar',
+        label: labelText,
+        data: sortedData,
+        backgroundColor: sortedData.map(d =>
+          hsl_col_perc(d, minValue, maxValue)
+        ),
+        borderWidth: 1
+      },
+      {
+        type: 'line',
+        label: labelText2,
+        data: cumulativeVariance,
+        backgroundColor: 
+          `hsl(243, 100%, 80%)`,
+        borderWidth: 1,
+        showLine: true
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: true,
+    legend: { display: false },
+    title: {
+      display: true,
+      text: title
+    },
+    scales: {
+      yAxes: [
         {
-          label: labelText,
-          data: sortedData,
-          backgroundColor: sortedData.map(d =>
-            hsl_col_perc(d, minValue, maxValue)
-          ),
-          borderWidth: 1
+          ticks: {
+            suggestedMin: 0,
+            beginAtZero: true
+          },
+          scaleLabel: {
+            display: true,
+            labelString: '% Variance'
+          }
         }
       ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      legend: { display: false },
-      title: {
-        display: true,
-        text: title
-      },
-      scales: {
-        yAxes: [
-          {
-            ticks: {
-              suggestedMin: 0,
-              beginAtZero: true
-            },
-            scaleLabel: {
-              display: true,
-              labelString: '% Variance'
-            }
+    tooltips: {
+      intersect: false,
+      callbacks: {
+        title: function(toolTipItems: ChartTooltipItem[]): string {
+          const item: ChartTooltipItem = toolTipItems[0];
+          if (item.datasetIndex === 1) {
+            return 'Cumulative Variance';
           }
-        ]
-      },
-      tooltips: {
-        intersect: false,
-        callbacks: {
-          title: function(toolTipItems: ChartTooltipItem[]): string {
-            const item : ChartTooltipItem  =  toolTipItems[0]
-            return String(item.xLabel);
-          },
-          label: function(tooltipItem: ChartTooltipItem): string {
-            return formattedValues[tooltipItem.index!];
-            // return String(tooltipItem.yLabel);
+          return String(item.xLabel);
+        },
+        label: function(tooltipItem: ChartTooltipItem): string {
+          if (tooltipItem.datasetIndex === 1) {
+            return String(cumulativeVariancePercentages[tooltipItem.index!]);
           }
+          return formattedValues[tooltipItem.index!] + '%';
         }
       }
     }
+  };
+
+  var chart = new Chart(ctx!, {
+    type: 'bar',
+    data: chartData,
+    options: options
   });
   return chart;
 }
