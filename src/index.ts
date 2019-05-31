@@ -24,7 +24,8 @@ for (let individual of individualStats) {
 console.log(`dataset`);
 console.log(dataset);
 
-const pca = new PCA(dataset);
+// test with the scale false and see if data needs to be scaled in addition to being centered
+const pca = new PCA(dataset, {scale: true});
 console.log(`Explained Variance`);
 console.log(pca.getExplainedVariance());
 console.log(`PCA Object`);
@@ -40,15 +41,49 @@ console.log(pca.getStandardDeviations());
 console.log(`loadings`);
 console.log(pca.getLoadings());
 
+
+console.log(`-------------------`);
+const numSignificantComponents = 2;
+
+const featureVector: number[][] = [];
+for (let i = 0; i < numSignificantComponents ; i++) {
+  featureVector.push(pca.getEigenvectors().data[i]);
+}
+console.log(`Feature vector 2D`);
+console.log(featureVector);
+
+// finalDataSet = featureVector(transpose) * standardizedOriginalDataSet(transpose)
+//                    2 x 55                        3714 x 55 
+// I need the first to be 55 x 2 so that the matricies can be transposed and multiplied
+// final dataset should be 2 x 3714 ???
+// 3714 x 2 makes more sense
+
+const prediction = pca.predict(dataset);
+console.log('prediction');
+console.log(prediction);
+
+// trying to get the dataset projected into the space of the first two computed components
+const projectedData: Object[] = [];
+for (let row of prediction.data) {
+  projectedData.push({x: row[0], y: row[1]});
+}
+console.log('projectedData');
+console.log(projectedData);
+
+generateScatterChart('prediction-chart', '2D Projection', projectedData);
+// https://github.com/mrdoob/three.js/
+
+const componentsShown = 10;
+
 const variancePercentages: number[] = pca
   .getExplainedVariance()
-  .slice(0, 7)
+  .slice(0, componentsShown)
   .map((d: number) => d * 100)
   .filter((d: number) => d > 0);
 
 const cumulativeVariancePercentages: number[] = pca
   .getCumulativeVariance()
-  .slice(0, 7)
+  .slice(0, componentsShown)
   .map((d: number) => d * 100);
 
 generateBarGraph(
@@ -88,7 +123,7 @@ function generateBarGraph(
     labels.push(`PC${i}`);
   }
 
-  const chartData = {
+  const chartData: Chart.ChartData  = {
     labels: labels,
     datasets: [
       {
@@ -168,4 +203,62 @@ function hsl_col_perc(value: number, min: number, max: number) {
   const percent = place / range;
   const colorPercent = 70 - (percent * 100) / 2;
   return `hsl(243, 100%, ${colorPercent}%)`;
+}
+// canvasName: string,
+//   sortedData: number[],
+//   labelText: string,
+//   title: string,
+//   cumulativeVariance: number[],
+//   labelText2: string
+function generateScatterChart(canvasName: string, title: string, data: Object[]) {
+  var ctx = (<HTMLCanvasElement>(
+    document.getElementById(canvasName)!
+  )).getContext('2d');
+
+  var chartData: Chart.ChartData = {
+    datasets: [
+      {
+        label: 'Players',
+        type: 'scatter',
+        backgroundColor: 'hsl(244, 100%, 50%)',
+        pointRadius: 5,
+        data: data,
+        showLine: false
+      }
+    ]
+  };
+
+  const options = {
+    title: { display: true, text: title },
+    scales: {
+      xAxes: [
+        {
+          type: 'linear',
+          position: 'bottom',
+          scaleLabel: {
+            display: true,
+            labelString: 'PC_0'
+          }
+        }
+      ],
+      yAxes: [
+        {
+          scaleLabel: {
+            display: true,
+            labelString: 'PC_1'
+          }
+        }
+      ]
+    },
+    tooltips: {
+      intersect: false
+    }
+  };
+
+  var scatterChart = new Chart(ctx!, {
+    type: 'scatter',
+    data: chartData,
+    options: options
+  });
+  return scatterChart;
 }

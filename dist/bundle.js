@@ -24921,7 +24921,7 @@ for (let individual of individualStats) {
 }
 console.log(`dataset`);
 console.log(dataset);
-const pca = new PCA(dataset);
+const pca = new PCA(dataset, { scale: true });
 console.log(`Explained Variance`);
 console.log(pca.getExplainedVariance());
 console.log(`PCA Object`);
@@ -24936,14 +24936,33 @@ console.log(`standard deviations`);
 console.log(pca.getStandardDeviations());
 console.log(`loadings`);
 console.log(pca.getLoadings());
+console.log(`-------------------`);
+const numSignificantComponents = 2;
+const featureVector = [];
+for (let i = 0; i < numSignificantComponents; i++) {
+    featureVector.push(pca.getEigenvectors().data[i]);
+}
+console.log(`Feature vector 2D`);
+console.log(featureVector);
+const prediction = pca.predict(dataset);
+console.log('prediction');
+console.log(prediction);
+const projectedData = [];
+for (let row of prediction.data) {
+    projectedData.push({ x: row[0], y: row[1] });
+}
+console.log('projectedData');
+console.log(projectedData);
+generateScatterChart('prediction-chart', '2D Projection', projectedData);
+const componentsShown = 10;
 const variancePercentages = pca
     .getExplainedVariance()
-    .slice(0, 7)
+    .slice(0, componentsShown)
     .map((d) => d * 100)
     .filter((d) => d > 0);
 const cumulativeVariancePercentages = pca
     .getCumulativeVariance()
-    .slice(0, 7)
+    .slice(0, componentsShown)
     .map((d) => d * 100);
 generateBarGraph('variance-chart', variancePercentages, 'Variance', 'Component Variance', cumulativeVariancePercentages, 'Cumulative Variance');
 function generateBarGraph(canvasName, sortedData, labelText, title, cumulativeVariance, labelText2) {
@@ -24973,7 +24992,7 @@ function generateBarGraph(canvasName, sortedData, labelText, title, cumulativeVa
                 type: 'line',
                 label: labelText2,
                 data: cumulativeVariance,
-                backgroundColor: `hsl(243, 100%,80%)`,
+                backgroundColor: `hsl(243, 100%, 80%)`,
                 borderWidth: 1,
                 showLine: true
             }
@@ -25033,6 +25052,53 @@ function hsl_col_perc(value, min, max) {
     const percent = place / range;
     const colorPercent = 70 - (percent * 100) / 2;
     return `hsl(243, 100%, ${colorPercent}%)`;
+}
+function generateScatterChart(canvasName, title, data) {
+    var ctx = (document.getElementById(canvasName)).getContext('2d');
+    var chartData = {
+        datasets: [
+            {
+                label: 'Players',
+                type: 'scatter',
+                backgroundColor: 'hsl(244, 100%, 50%)',
+                pointRadius: 5,
+                data: data,
+                showLine: false
+            }
+        ]
+    };
+    const options = {
+        title: { display: true, text: title },
+        scales: {
+            xAxes: [
+                {
+                    type: 'linear',
+                    position: 'bottom',
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'PC_0'
+                    }
+                }
+            ],
+            yAxes: [
+                {
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'PC_1'
+                    }
+                }
+            ]
+        },
+        tooltips: {
+            intersect: false
+        }
+    };
+    var scatterChart = new chart_js_1.default(ctx, {
+        type: 'scatter',
+        data: chartData,
+        options: options
+    });
+    return scatterChart;
 }
 
 },{"chart.js":1,"ml-pca":7}]},{},[9]);
