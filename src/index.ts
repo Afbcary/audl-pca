@@ -65,7 +65,7 @@ var data = [
   }
 ];
 
-Plotly.newPlot('heatmap', data, {}, { showSendToCloud: true, yaxis: {automargin: true}, xaxis: {automargin: true}});
+Plotly.newPlot('heatmap', data, { autosize: true, height: 1200, yaxis: {automargin: true}, xaxis: {automargin: true}}, { showSendToCloud: true});
 
 console.log(`dataset`);
 console.log(dataset);
