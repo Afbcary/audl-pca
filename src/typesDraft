@@ -1,0 +1,23 @@
+export function sort(x: number[]): number;
+export function round(x: number, n: number): number;
+export function min(x: number[]): number;
+export function max(x: number[]): number;
+export function range(start: number, stop: number): number[];
+export function sum(x: number[]): number;
+export function median(x: number[]): number;
+export function mean(x: number[]): number;
+export function deviation(x: number[]): number;
+export function variance(x: number[], bias: boolean): number;
+export function standardDeviation(x: number[], bias: boolean): number;
+export function standardize(x: number[]): number;
+export function rank(x: number[]): number[];
+export Object correlation {
+ function pearson(x:number, y: number, standardize: boolean): number;
+ function spearman(x:number, y: number, rank: boolean): number;
+}
+export Object distance {
+ function euclidean(x: number, y: number): number;
+ function manhattan(x: number, y: number): number;
+};
+export function pairwiseDistance(x: number[][], distanceMetric: Object): number[];
+export function hierarchicalClustering(pairwiseDistances: number[][], linkage: String): number[];

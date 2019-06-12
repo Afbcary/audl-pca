@@ -1,0 +1,23 @@
+body {
+  display: flex;
+  flex-flow: column wrap;
+  margin: 0 5vw 0 5vw;
+}
+header {
+  background-color: cadetblue;
+  height: 20vh;
+  margin-top: 5vh;
+}
+
+h1 {
+  color: rgb(9, 255, 0);
+  align-self: center;
+  border-style: solid;
+  border-color: black;
+  align-self: stretch;
+  text-align: center;
+}
+
+p {
+  text-indent: 50px;
+}

@@ -1,4 +1,8 @@
 import Chart, { ChartTooltipItem } from 'chart.js';
+import spearson from 'spearson';
+import { analyzedStats } from '../assets/AnalyzedStats';
+import { individualStats } from '../assets/IndividualStats';
+var Plotly = require('plotly.js-cartesian-dist');
 
 var { PCA } = require('ml-pca');
 
@@ -21,11 +25,53 @@ for (let individual of individualStats) {
   }
   dataset.push(sample);
 }
+
+// HEATMAP
+// organize into pearson / spearman input
+// 3714 records, 55 features so 55 x 3714 array
+const spearsonDataset: number[][] = [];
+let featureIndex = 0;
+while (featureIndex < dataset[0].length) {
+  spearsonDataset[featureIndex] = [];
+  for (let row of dataset) {
+    spearsonDataset[featureIndex].push(row[featureIndex]);
+  }
+  featureIndex++;
+}
+console.log(`spearsonDataset`);
+console.log(spearsonDataset);
+
+const pearsonCorrelations: number[][] = [];
+for (let i = 0 ; i < spearsonDataset.length ; i++) {
+  pearsonCorrelations.push(new Array<number>());
+  for (let j = 0 ; j < spearsonDataset.length ; j++) {
+    pearsonCorrelations[i][j] = spearson.correlation.pearson(
+      spearsonDataset[i],
+      spearsonDataset[j],
+      true
+    );
+  }
+}
+
+console.log(`pearsonCorrelations`);
+console.log(pearsonCorrelations);
+
+var data = [
+  {
+    z: pearsonCorrelations,
+    x: analyzedStats,
+    y: analyzedStats,
+    type: 'heatmap'
+  }
+];
+
+Plotly.newPlot('heatmap', data, {}, { showSendToCloud: true, yaxis: {automargin: true}, xaxis: {automargin: true}});
+
 console.log(`dataset`);
 console.log(dataset);
 
 // test with the scale false and see if data needs to be scaled in addition to being centered
-const pca = new PCA(dataset, {scale: true});
+const pca = new PCA(dataset, { scale: true });
 console.log(`Explained Variance`);
 console.log(pca.getExplainedVariance());
 console.log(`PCA Object`);
@@ -41,19 +87,18 @@ console.log(pca.getStandardDeviations());
 console.log(`loadings`);
 console.log(pca.getLoadings());
 
-
 console.log(`-------------------`);
 const numSignificantComponents = 2;
 
 const featureVector: number[][] = [];
-for (let i = 0; i < numSignificantComponents ; i++) {
+for (let i = 0; i < numSignificantComponents; i++) {
   featureVector.push(pca.getEigenvectors().data[i]);
 }
 console.log(`Feature vector 2D`);
 console.log(featureVector);
 
 // finalDataSet = featureVector(transpose) * standardizedOriginalDataSet(transpose)
-//                    2 x 55                        3714 x 55 
+//                    2 x 55                        3714 x 55
 // I need the first to be 55 x 2 so that the matricies can be transposed and multiplied
 // final dataset should be 2 x 3714 ???
 // 3714 x 2 makes more sense
@@ -65,7 +110,7 @@ console.log(prediction);
 // trying to get the dataset projected into the space of the first two computed components
 const projectedData: Object[] = [];
 for (let row of prediction.data) {
-  projectedData.push({x: row[0], y: row[1]});
+  projectedData.push({ x: row[0], y: row[1] });
 }
 console.log('projectedData');
 console.log(projectedData);
@@ -123,7 +168,7 @@ function generateBarGraph(
     labels.push(`PC${i}`);
   }
 
-  const chartData: Chart.ChartData  = {
+  const chartData: Chart.ChartData = {
     labels: labels,
     datasets: [
       {
@@ -139,8 +184,7 @@ function generateBarGraph(
         type: 'line',
         label: labelText2,
         data: cumulativeVariance,
-        backgroundColor: 
-          `hsl(243, 100%, 80%)`,
+        backgroundColor: `hsl(243, 100%, 80%)`,
         borderWidth: 1,
         showLine: true
       }
@@ -210,7 +254,11 @@ function hsl_col_perc(value: number, min: number, max: number) {
 //   title: string,
 //   cumulativeVariance: number[],
 //   labelText2: string
-function generateScatterChart(canvasName: string, title: string, data: Object[]) {
+function generateScatterChart(
+  canvasName: string,
+  title: string,
+  data: Object[]
+) {
   var ctx = (<HTMLCanvasElement>(
     document.getElementById(canvasName)!
   )).getContext('2d');
